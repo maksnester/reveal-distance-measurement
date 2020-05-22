@@ -1,24 +1,32 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useRef, useState } from 'react'
+import { Cognite3DViewer } from '@cognite/reveal'
+import { CogniteClient } from '@cognite/sdk';
+
+const client = new CogniteClient({ appId: "reveal.example.simple" });
+client.loginWithOAuth({ project: "3ddemo" });
 
 function App() {
+  const canvasWrapper = useRef<HTMLDivElement>(null)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [viewer, setViewer] = useState<Cognite3DViewer>();
+
+  useEffect(() => {
+    const localViewer = new Cognite3DViewer({
+      sdk: client,
+      domElement: canvasWrapper.current!,
+    });
+    setViewer(localViewer);
+    localViewer.addModel({ modelId: 5641986602571236, revisionId: 5254077049582015 })
+    return () => {
+      localViewer.dispose();
+      console.log('viewer disposed');
+    }
+  }, [])
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Hello world</h1>
+      <div ref={canvasWrapper}/>
     </div>
   );
 }
