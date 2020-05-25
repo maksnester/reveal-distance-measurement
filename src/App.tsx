@@ -1,41 +1,91 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Cognite3DModel, Cognite3DViewer } from '@cognite/reveal'
-import { CogniteClient } from '@cognite/sdk';
+import React, { useEffect, useRef } from "react";
+import { CogniteClient } from "@cognite/sdk";
+import * as THREE from "three";
+import { CadNode, RevealManager } from "@cognite/reveal/experimental";
+import CameraControls from "camera-controls";
+import { Scene, WebGLRenderer } from "three";
 
-const client = new CogniteClient({ appId: "reveal.example.simple" });
-client.loginWithOAuth({ project: "3ddemo" });
+CameraControls.install({ THREE });
 
 function App() {
-  const canvasWrapper = useRef<HTMLDivElement>(null)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [viewer, setViewer] = useState<Cognite3DViewer>();
-  const [model, setModel] = useState<Cognite3DModel>();
+  const canvasWrapper = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const localViewer = new Cognite3DViewer({
-      sdk: client,
-      domElement: canvasWrapper.current!,
-    });
-    setViewer(localViewer);
+    let scene: Scene | undefined;
+    let renderer: WebGLRenderer | undefined;
     (async () => {
-      const model = await localViewer.addModel({ modelId: 5641986602571236, revisionId: 5254077049582015 })
-      localViewer.fitCameraToModel(model)
-      setModel(model)
-    })()
+      if (!canvasWrapper.current) {
+        return;
+      }
+
+      const client = new CogniteClient({ appId: "reveal.example.measurement" });
+      client.loginWithOAuth({ project: "publicdata" });
+
+      const scene = new THREE.Scene();
+      let modelsNeedUpdate = true; // rm ??? why do I need this
+      const revealManager = new RevealManager(client, () => {
+        modelsNeedUpdate = true;
+      });
+
+      const model: CadNode = await revealManager.addModelFromUrl(
+        "https://localhost:3000/primitives"
+      );
+      scene.add(model);
+
+      const renderer = new THREE.WebGLRenderer();
+      const width = window.innerWidth / 2;
+      const height = window.innerHeight / 2;
+
+      renderer.setClearColor("#444");
+      renderer.setSize(width, height);
+      canvasWrapper.current.appendChild(renderer.domElement);
+
+      const { position, target, near, far } = model.suggestCameraConfig();
+      const camera = new THREE.PerspectiveCamera(75, width / height, near, far);
+      const controls = new CameraControls(camera, renderer.domElement);
+      controls.setLookAt(
+        position.x,
+        position.y,
+        position.z,
+        target.x,
+        target.y,
+        target.z
+      );
+
+      controls.update(0.0); // rm ??? why do I need this
+      camera.updateMatrixWorld(); // rm ??? why do I need this
+
+      const clock = new THREE.Clock();
+
+      const render = () => {
+        const delta = clock.getDelta();
+        const controlsNeedUpdate = controls.update(delta);
+        if (controlsNeedUpdate) {
+          revealManager.update(camera);
+        }
+        if (controlsNeedUpdate || modelsNeedUpdate) {
+          renderer.render(scene, camera);
+        }
+        requestAnimationFrame(render);
+      };
+      revealManager.update(camera);
+      render();
+    })();
+
     return () => {
-      localViewer.dispose();
-      console.log('viewer disposed');
-    }
-  }, [])
+      scene?.dispose();
+      renderer?.dispose();
+    };
+  }, []);
 
   return (
     <div>
       <h1>Hello world</h1>
       <div>
-        <div style={{display: 'flex'}}>
+        <div style={{ display: "flex" }}>
           <button>Use measurement</button>
         </div>
-        <div ref={canvasWrapper} style={{maxHeight: '90vh'}}/>
+        <div ref={canvasWrapper} style={{ maxHeight: "90vh" }} />
       </div>
     </div>
   );
