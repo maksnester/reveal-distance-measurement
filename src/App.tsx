@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { CogniteClient } from "@cognite/sdk";
 import * as THREE from "three";
 import {
@@ -32,6 +32,7 @@ function createSphere(point: THREE.Vector3, color: string): THREE.Mesh {
 
 function App() {
   const canvasWrapper = useRef<HTMLDivElement>(null);
+  const [measuredDistance, setMeasuredDistance] = useState<any>();
 
   useEffect(() => {
     let scene: Scene | undefined;
@@ -56,8 +57,8 @@ function App() {
       scene.add(model);
 
       // without light there is no colors for custom geometry (like our spheres)
-      var light = new THREE.AmbientLight( 0xffffff ); // soft white light
-      scene.add( light );
+      var light = new THREE.AmbientLight(0xffffff); // soft white light
+      scene.add(light);
 
       const renderer = new THREE.WebGLRenderer();
       const width = window.innerWidth / 2;
@@ -108,7 +109,14 @@ function App() {
       revealManager.update(camera);
       render();
 
-      renderer.domElement.addEventListener("click", (event: MouseEvent) => {
+      let points: Array<THREE.Mesh> = [];
+      let line: THREE.Line | null = null;
+
+      // add point on alt+click
+      renderer.domElement.addEventListener("mousedown", (event: MouseEvent) => {
+        if (!event.altKey) {
+          return;
+        }
         const coords = getNormalizedCoords(event, renderer.domElement);
 
         // Pick in Reveal
@@ -122,9 +130,34 @@ function App() {
         })();
 
         if (revealPickResult) {
-          scene.add(createSphere(revealPickResult.point, "#f5f500"));
+          const pointMesh = createSphere(revealPickResult.point, "#f5f500");
+          scene.add(pointMesh);
           model.requestNodeUpdate([revealPickResult.treeIndex]);
           pickingNeedsUpdate = true;
+
+          if (line) {
+            scene.remove(...points);
+            scene.remove(line);
+            line = null;
+            points = [];
+          }
+
+          points.push(pointMesh);
+
+          if (points.length === 2) {
+            const material = new THREE.LineBasicMaterial({ color: 0xffff00 });
+            const geometry = new THREE.BufferGeometry().setFromPoints(
+              points.map((p) => {
+                return p.position;
+              })
+            );
+            line = new THREE.Line(geometry, material);
+            scene.add(line);
+            modelsNeedUpdate = true;
+            setMeasuredDistance(
+              points[0].position.distanceTo(points[1].position)
+            );
+          }
         }
       });
     })();
@@ -138,10 +171,10 @@ function App() {
   return (
     <div>
       <h1>Hello world</h1>
+      <h4>Hold "ALT" and click to add point</h4>
+      <div>{measuredDistance && <>Distance: {measuredDistance}</>}</div>
       <div>
-        <div style={{ display: "flex" }}>
-          <button>Use measurement</button>
-        </div>
+        <div style={{ display: "flex" }}></div>
         <div ref={canvasWrapper} style={{ maxHeight: "90vh" }} />
       </div>
     </div>
