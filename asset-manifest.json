@@ -1,22 +1,22 @@
 {
   "files": {
-    "main.js": "/static/js/main.2809ab4e.chunk.js",
-    "main.js.map": "/static/js/main.2809ab4e.chunk.js.map",
-    "runtime-main.js": "/static/js/runtime-main.1cf7556b.js",
-    "runtime-main.js.map": "/static/js/runtime-main.1cf7556b.js.map",
-    "static/js/2.4a61240d.chunk.js": "/static/js/2.4a61240d.chunk.js",
-    "static/js/2.4a61240d.chunk.js.map": "/static/js/2.4a61240d.chunk.js.map",
-    "1.worker.js": "/1.worker.js",
-    "bb3bcc5c3a81b10d483b.module.wasm": "/bb3bcc5c3a81b10d483b.module.wasm",
-    "index.html": "/index.html",
-    "parser.worker.js": "/parser.worker.js",
-    "precache-manifest.8cb53a98008f001b89d7ed455881da66.js": "/precache-manifest.8cb53a98008f001b89d7ed455881da66.js",
-    "service-worker.js": "/service-worker.js",
-    "static/js/2.4a61240d.chunk.js.LICENSE.txt": "/static/js/2.4a61240d.chunk.js.LICENSE.txt"
+    "main.js": "/reveal-distance-measurement/static/js/main.d1b74660.chunk.js",
+    "main.js.map": "/reveal-distance-measurement/static/js/main.d1b74660.chunk.js.map",
+    "runtime-main.js": "/reveal-distance-measurement/static/js/runtime-main.d984c4e1.js",
+    "runtime-main.js.map": "/reveal-distance-measurement/static/js/runtime-main.d984c4e1.js.map",
+    "static/js/2.98b32324.chunk.js": "/reveal-distance-measurement/static/js/2.98b32324.chunk.js",
+    "static/js/2.98b32324.chunk.js.map": "/reveal-distance-measurement/static/js/2.98b32324.chunk.js.map",
+    "1.worker.js": "/reveal-distance-measurement/1.worker.js",
+    "bb3bcc5c3a81b10d483b.module.wasm": "/reveal-distance-measurement/bb3bcc5c3a81b10d483b.module.wasm",
+    "index.html": "/reveal-distance-measurement/index.html",
+    "parser.worker.js": "/reveal-distance-measurement/parser.worker.js",
+    "precache-manifest.1877da8d4b705c9b67d61005c0373d13.js": "/reveal-distance-measurement/precache-manifest.1877da8d4b705c9b67d61005c0373d13.js",
+    "service-worker.js": "/reveal-distance-measurement/service-worker.js",
+    "static/js/2.98b32324.chunk.js.LICENSE.txt": "/reveal-distance-measurement/static/js/2.98b32324.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.1cf7556b.js",
-    "static/js/2.4a61240d.chunk.js",
-    "static/js/main.2809ab4e.chunk.js"
+    "static/js/runtime-main.d984c4e1.js",
+    "static/js/2.98b32324.chunk.js",
+    "static/js/main.d1b74660.chunk.js"
   ]
 }
