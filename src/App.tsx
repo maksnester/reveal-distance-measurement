@@ -104,13 +104,14 @@ function getMiddlePoint(p1: THREE.Vector3, p2: THREE.Vector3) {
 
 function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const distanceLabel = useRef<HTMLDivElement>(null);
   const [measuredDistance, setMeasuredDistance] = useState<any>();
 
   useEffect(() => {
     let scene: Scene | undefined;
     let renderer: WebGLRenderer | undefined;
     (async () => {
-      if (!canvas.current) {
+      if (!canvas.current || !distanceLabel.current) {
         return;
       }
 
@@ -155,22 +156,10 @@ function App() {
 
       addWASDHandling(controls);
 
-      controls.update(0.0); // rm ??? why do I need this
-      camera.updateMatrixWorld(); // rm ??? why do I need this
+      // controls.update(0.0); // rm ??? why do I need this
+      // camera.updateMatrixWorld(); // rm ??? why do I need this
 
-      const htmlElement = createHtmlElement();
-      canvas.current.parentElement!.appendChild(htmlElement);
       const htmlOverlayHelper = new utilities.HtmlOverlayHelper();
-
-      function addLabel(text: string, point: THREE.Vector3) {
-        htmlOverlayHelper.addOverlayElement(htmlElement, point);
-        htmlElement.textContent = text;
-        htmlElement.style.display = "block";
-      }
-      function hideLabel() {
-        htmlOverlayHelper.removeOverlayElement(htmlElement);
-        htmlElement.style.display = "none";
-      }
 
       const clock = new THREE.Clock();
 
@@ -222,7 +211,8 @@ function App() {
             scene.remove(line);
             line = null;
             points = [];
-            hideLabel();
+            setMeasuredDistance(0);
+            htmlOverlayHelper.removeOverlayElement(distanceLabel.current!);
           }
 
           points.push(pointMesh);
@@ -234,11 +224,16 @@ function App() {
             );
             line = new THREE.Line(geometry, material);
             scene.add(line);
-            const distance = points[0].position.distanceTo(points[1].position)
-            addLabel(distance.toFixed(2), getMiddlePoint(points[0].position, points[1].position));
+
+            htmlOverlayHelper.addOverlayElement(
+              distanceLabel.current!,
+              getMiddlePoint(points[0].position, points[1].position)
+            );
+            setMeasuredDistance(
+              points[0].position.distanceTo(points[1].position).toFixed(4)
+            );
 
             isRenderRequired = true;
-            setMeasuredDistance(distance);
           }
         }
       });
@@ -255,7 +250,6 @@ function App() {
       <h1>Distance measurement</h1>
       <h4>Hold "ALT" and click to add point</h4>
       <div>
-        <div style={{ display: "flex" }}></div>
         <div
           style={{
             maxHeight: "90vh",
@@ -265,30 +259,27 @@ function App() {
           }}
         >
           <canvas ref={canvas} style={{ display: "block" }} />
+          <div
+            ref={distanceLabel}
+            style={{
+              marginTop: "-25px",
+              padding: "3px",
+              position: "absolute",
+              pointerEvents: "none",
+              top: "298px",
+              left: "395px",
+              color: "rgb(255, 255, 255)",
+              background: "rgba(35, 35, 35, 0.855)",
+              borderRadius: "15%",
+              display: measuredDistance ? "block" : "none",
+            }}
+          >
+            {measuredDistance}
+          </div>
         </div>
       </div>
-      <div>{measuredDistance && <>Distance: {measuredDistance}</>}</div>
     </div>
   );
-}
-
-function createHtmlElement() {
-  const htmlElement = document.createElement("div");
-  const style = htmlElement.style;
-
-  style.marginTop = "-25px";
-  style.padding = "3px";
-  style.position = "absolute";
-  style.pointerEvents = "none";
-  style.top = "298px";
-  style.left = "395px";
-  style.color = "rgb(255, 255, 255)";
-  style.background = "rgba(35, 35, 35, 0.855)";
-  style.borderRadius = "15%";
-  style.display = "none";
-
-  htmlElement.className = "htmlOverlay";
-  return htmlElement;
 }
 
 export default App;
