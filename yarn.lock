@@ -5371,6 +5371,11 @@ hmac-drbg@^1.0.0:
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.1"
 
+hold-event@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/hold-event/-/hold-event-0.0.1.tgz#576f9b57fb2af7526029609adbd1089485ef7334"
+  integrity sha512-CB63bPcgMaierrHAGBnNaucJ1ZHVaPmtCKp1hsRc6nc66b5p+OM1n3MyExk1wtS5vrhCopP/lpUZ3kbwOxXmbQ==
+
 homedir-polyfill@^1.0.1:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/homedir-polyfill/-/homedir-polyfill-1.0.3.tgz#743298cef4e5af3e194161fbadcc2151d3a058e8"
