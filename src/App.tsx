@@ -110,9 +110,9 @@ function App() {
       client.loginWithOAuth({ project: "publicdata" });
 
       const scene = new THREE.Scene();
-      let modelsNeedUpdate = true; // rm ??? why do I need this
+      let isRenderRequired = true;
       const revealManager = new RevealManager(client, () => {
-        modelsNeedUpdate = true;
+        isRenderRequired = true;
       });
 
       const model: CadNode = await revealManager.addModelFromUrl(
@@ -151,24 +151,16 @@ function App() {
 
       const clock = new THREE.Clock();
 
-      let pickingNeedsUpdate = false;
-
       const render = () => {
         const delta = clock.getDelta();
         const controlsNeedUpdate = controls.update(delta);
         if (controlsNeedUpdate) {
+          isRenderRequired = true
           revealManager.update(camera);
         }
-        if (controlsNeedUpdate || modelsNeedUpdate || pickingNeedsUpdate) {
-          console.log(
-            "controlsNeedUpdate || modelsNeedUpdate || pickingNeedsUpdate",
-            controlsNeedUpdate,
-            modelsNeedUpdate,
-            pickingNeedsUpdate
-          );
+        if (isRenderRequired) {
           renderer.render(scene, camera);
-          modelsNeedUpdate = false;
-          pickingNeedsUpdate = false;
+          isRenderRequired = false;
         }
         requestAnimationFrame(render);
       };
@@ -199,7 +191,7 @@ function App() {
           const pointMesh = createSphere(revealPickResult.point, "#f5f500");
           scene.add(pointMesh);
           model.requestNodeUpdate([revealPickResult.treeIndex]);
-          pickingNeedsUpdate = true;
+          isRenderRequired = true;
 
           if (line) {
             scene.remove(...points);
@@ -219,7 +211,7 @@ function App() {
             );
             line = new THREE.Line(geometry, material);
             scene.add(line);
-            modelsNeedUpdate = true;
+            isRenderRequired = true;
             setMeasuredDistance(
               points[0].position.distanceTo(points[1].position)
             );
