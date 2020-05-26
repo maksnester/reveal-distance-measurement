@@ -5,6 +5,7 @@ import {
   CadNode,
   intersectCadNodes,
   RevealManager,
+  utilities,
 } from "@cognite/reveal/experimental";
 import CameraControls from "camera-controls";
 import { Scene, WebGLRenderer } from "three";
@@ -87,22 +88,29 @@ function getNormalizedCoords(
 
 function createSphere(point: THREE.Vector3, color: string): THREE.Mesh {
   const sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.2),
+    new THREE.SphereGeometry(0.1),
     new THREE.MeshPhongMaterial({ color })
   );
   sphere.position.copy(point);
   return sphere;
 }
 
+function getMiddlePoint(p1: THREE.Vector3, p2: THREE.Vector3) {
+  const x = (p2.x + p1.x) / 2;
+  const y = (p2.y + p1.y) / 2;
+  const z = (p2.z + p1.z) / 2;
+  return new THREE.Vector3(x, y, z);
+}
+
 function App() {
-  const canvasWrapper = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
   const [measuredDistance, setMeasuredDistance] = useState<any>();
 
   useEffect(() => {
     let scene: Scene | undefined;
     let renderer: WebGLRenderer | undefined;
     (async () => {
-      if (!canvasWrapper.current) {
+      if (!canvas.current) {
         return;
       }
 
@@ -124,13 +132,14 @@ function App() {
       var light = new THREE.AmbientLight(0xffffff); // soft white light
       scene.add(light);
 
-      const renderer = new THREE.WebGLRenderer();
-      const width = window.innerWidth / 2;
-      const height = window.innerHeight / 2;
+      const renderer = new THREE.WebGLRenderer({
+        canvas: canvas.current,
+      });
+      const width = Math.ceil(window.innerWidth * 0.75);
+      const height = Math.ceil(window.innerHeight * 0.75);
 
       renderer.setClearColor("#444");
       renderer.setSize(width, height);
-      canvasWrapper.current.appendChild(renderer.domElement);
 
       const { position, target, near, far } = model.suggestCameraConfig();
       const camera = new THREE.PerspectiveCamera(75, width / height, near, far);
@@ -149,17 +158,32 @@ function App() {
       controls.update(0.0); // rm ??? why do I need this
       camera.updateMatrixWorld(); // rm ??? why do I need this
 
+      const htmlElement = createHtmlElement();
+      canvas.current.parentElement!.appendChild(htmlElement);
+      const htmlOverlayHelper = new utilities.HtmlOverlayHelper();
+
+      function addLabel(text: string, point: THREE.Vector3) {
+        htmlOverlayHelper.addOverlayElement(htmlElement, point);
+        htmlElement.textContent = text;
+        htmlElement.style.display = "block";
+      }
+      function hideLabel() {
+        htmlOverlayHelper.removeOverlayElement(htmlElement);
+        htmlElement.style.display = "none";
+      }
+
       const clock = new THREE.Clock();
 
       const render = () => {
         const delta = clock.getDelta();
         const controlsNeedUpdate = controls.update(delta);
         if (controlsNeedUpdate) {
-          isRenderRequired = true
+          isRenderRequired = true;
           revealManager.update(camera);
         }
         if (isRenderRequired) {
           renderer.render(scene, camera);
+          htmlOverlayHelper.updatePositions(renderer, camera);
           isRenderRequired = false;
         }
         requestAnimationFrame(render);
@@ -198,6 +222,7 @@ function App() {
             scene.remove(line);
             line = null;
             points = [];
+            hideLabel();
           }
 
           points.push(pointMesh);
@@ -205,16 +230,15 @@ function App() {
           if (points.length === 2) {
             const material = new THREE.LineBasicMaterial({ color: 0xffff00 });
             const geometry = new THREE.BufferGeometry().setFromPoints(
-              points.map((p) => {
-                return p.position;
-              })
+              points.map((p) => p.position)
             );
             line = new THREE.Line(geometry, material);
             scene.add(line);
+            const distance = points[0].position.distanceTo(points[1].position)
+            addLabel(distance.toFixed(2), getMiddlePoint(points[0].position, points[1].position));
+
             isRenderRequired = true;
-            setMeasuredDistance(
-              points[0].position.distanceTo(points[1].position)
-            );
+            setMeasuredDistance(distance);
           }
         }
       });
@@ -228,15 +252,43 @@ function App() {
 
   return (
     <div>
-      <h1>Hello world</h1>
+      <h1>Distance measurement</h1>
       <h4>Hold "ALT" and click to add point</h4>
-      <div>{measuredDistance && <>Distance: {measuredDistance}</>}</div>
       <div>
         <div style={{ display: "flex" }}></div>
-        <div ref={canvasWrapper} style={{ maxHeight: "90vh" }} />
+        <div
+          style={{
+            maxHeight: "90vh",
+            maxWidth: "fit-content",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <canvas ref={canvas} style={{ display: "block" }} />
+        </div>
       </div>
+      <div>{measuredDistance && <>Distance: {measuredDistance}</>}</div>
     </div>
   );
+}
+
+function createHtmlElement() {
+  const htmlElement = document.createElement("div");
+  const style = htmlElement.style;
+
+  style.marginTop = "-25px";
+  style.padding = "3px";
+  style.position = "absolute";
+  style.pointerEvents = "none";
+  style.top = "298px";
+  style.left = "395px";
+  style.color = "rgb(255, 255, 255)";
+  style.background = "rgba(35, 35, 35, 0.855)";
+  style.borderRadius = "15%";
+  style.display = "none";
+
+  htmlElement.className = "htmlOverlay";
+  return htmlElement;
 }
 
 export default App;
