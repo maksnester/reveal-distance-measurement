@@ -125,7 +125,7 @@ function App() {
       });
 
       const model: CadNode = await revealManager.addModelFromUrl(
-        "https://localhost:3000/primitives"
+        `${window.location.origin}${process.env.PUBLIC_URL}/primitives`
       );
       scene.add(model);
 
