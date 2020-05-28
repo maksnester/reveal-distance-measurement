@@ -77,12 +77,13 @@ function addWASDHandling(cameraControls: CameraControls) {
 }
 
 function getNormalizedCoords(
-  event: MouseEvent,
+  event: MouseEvent | TouchEvent,
   domElement: HTMLCanvasElement
 ): { x: number; y: number } {
+  const e = 'clientX' in event ? event : event.touches[0]
   const rect = domElement.getBoundingClientRect();
-  const x = ((event.clientX - rect.left) / domElement.clientWidth) * 2 - 1;
-  const y = ((event.clientY - rect.top) / domElement.clientHeight) * -2 + 1;
+  const x = ((e.clientX - rect.left) / domElement.clientWidth) * 2 - 1;
+  const y = ((e.clientY - rect.top) / domElement.clientHeight) * -2 + 1;
   return { x, y };
 }
 
@@ -156,9 +157,6 @@ function App() {
 
       addWASDHandling(controls);
 
-      // controls.update(0.0); // rm ??? why do I need this
-      // camera.updateMatrixWorld(); // rm ??? why do I need this
-
       const htmlOverlayHelper = new utilities.HtmlOverlayHelper();
 
       const clock = new THREE.Clock();
@@ -183,9 +181,8 @@ function App() {
       let points: Array<THREE.Mesh> = [];
       let line: THREE.Line | null = null;
 
-      // add point on alt+click
-      renderer.domElement.addEventListener("mousedown", (event: MouseEvent) => {
-        if (!event.altKey) {
+      const addMeasurePoint = (event: MouseEvent | TouchEvent) => {
+        if ('button' in event && event.button !== THREE.MOUSE.LEFT) {
           return;
         }
         const coords = getNormalizedCoords(event, renderer.domElement);
@@ -236,7 +233,9 @@ function App() {
             isRenderRequired = true;
           }
         }
-      });
+      }
+      renderer.domElement.addEventListener("mousedown", addMeasurePoint);
+      renderer.domElement.addEventListener("touchstart", addMeasurePoint);
     })();
 
     return () => {
@@ -248,11 +247,11 @@ function App() {
   return (
     <div>
       <h1>Distance measurement</h1>
-      <h4>Hold "ALT" and click to add point</h4>
+      <h4>Hold "ALT" and click to add point.</h4>
+      <h5>Pixel ratio is {window.devicePixelRatio}</h5>
       <div>
         <div
           style={{
-            maxHeight: "90vh",
             maxWidth: "fit-content",
             position: "relative",
             overflow: "hidden",
@@ -262,12 +261,9 @@ function App() {
           <div
             ref={distanceLabel}
             style={{
-              marginTop: "-25px",
               padding: "3px",
               position: "absolute",
               pointerEvents: "none",
-              top: "298px",
-              left: "395px",
               color: "rgb(255, 255, 255)",
               background: "rgba(35, 35, 35, 0.855)",
               borderRadius: "15%",
