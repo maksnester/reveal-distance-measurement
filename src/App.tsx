@@ -140,6 +140,7 @@ function App() {
       const width = Math.ceil(window.innerWidth * 0.75);
       const height = Math.ceil(window.innerHeight * 0.75);
 
+      renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setClearColor("#444");
       renderer.setSize(width, height);
 
@@ -248,7 +249,6 @@ function App() {
     <div>
       <h1>Distance measurement</h1>
       <h4>Hold "ALT" and click to add point.</h4>
-      <h5>Pixel ratio is {window.devicePixelRatio}</h5>
       <div>
         <div
           style={{
